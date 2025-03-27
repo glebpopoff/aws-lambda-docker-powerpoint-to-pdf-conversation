@@ -5,4 +5,4 @@ aws lambda create-function \
     --role arn:aws:iam::792621386145:role/lambda-ppt-to-pdf-role \
     --timeout 60 \
     --memory-size 1024 \
-    --profile openbook
+    --profile aws-profile-name

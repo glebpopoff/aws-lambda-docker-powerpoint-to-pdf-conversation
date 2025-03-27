@@ -4,4 +4,4 @@ aws lambda add-permission \
     --action lambda:InvokeFunction \
     --principal s3.amazonaws.com \
     --source-arn arn:aws:s3:::poc-ppt-to-pdf-demo \
-    --profile openbook
+    --profile aws-profile-name

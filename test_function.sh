@@ -3,4 +3,4 @@ aws lambda invoke \
     --payload fileb://test-event.json \
     --cli-binary-format raw-in-base64-out \
     response.json \
-    --profile openbook
+    --profile aws-profile-name

@@ -6,9 +6,9 @@ https://medium.com/shelf-io-engineering/running-libreoffice-in-aws-lambda-2022-e
 
 aws ecr create-repository \
     --repository-name ppt-to-pdf-converter \
-    --profile openbook
+    --profile aws-profile-name
 
-aws ecr get-login-password --region us-east-1 --profile openbook | docker login --username AWS --password-stdin 792621386145.dkr.ecr.us-east-1.amazonaws.com
+aws ecr get-login-password --region us-east-1 --profile aws-profile-name | docker login --username AWS --password-stdin 792621386145.dkr.ecr.us-east-1.amazonaws.com
 
 docker build -t ppt-to-pdf-converter .
 
