@@ -1,12 +1,21 @@
 {
   "Records": [
     {
+      "eventVersion": "2.1",
+      "eventSource": "aws:s3",
+      "awsRegion": "us-east-1",
+      "eventTime": "2025-03-27T11:49:30.000Z",
+      "eventName": "ObjectCreated:Put",
       "s3": {
+        "s3SchemaVersion": "1.0",
         "bucket": {
-          "name": "poc-ppt-to-pdf-demo"
+          "name": "poc-ppt-to-pdf-demo",
+          "arn": "arn:aws:s3:::poc-ppt-to-pdf-demo"
         },
         "object": {
-          "key": "test.pptx"
+          "key": "test63.pptx",
+          "size": 120958,
+          "eTag": "d41d8cd98f00b204e9800998ecf8427e"
         }
       }
     }
