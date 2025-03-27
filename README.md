@@ -312,6 +312,9 @@ docker build -t ppt-to-pdf-converter .
 docker run -v $(pwd)/test:/tmp ppt-to-pdf-converter libreoffice7.4 --headless --convert-to pdf --outdir /tmp /tmp/test.pptx
 ```
 
+## Inspiration
+https://medium.com/shelf-io-engineering/running-libreoffice-in-aws-lambda-2022-edition-open-sourced-9bb0028911d8
+
 ## Contributing
 
 1. Fork the repository
