@@ -1,0 +1,9 @@
+{
+  "name": "ppt-to-pdf-converter-layer",
+  "version": "1.0.0",
+  "dependencies": {
+    "chrome-aws-lambda": "^10.1.0",
+    "fs-extra": "^11.2.0",
+    "puppeteer-core": "^10.1.0"
+  }
+}

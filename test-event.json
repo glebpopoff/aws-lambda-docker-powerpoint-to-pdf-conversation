@@ -1,0 +1,14 @@
+{
+  "Records": [
+    {
+      "s3": {
+        "bucket": {
+          "name": "poc-ppt-to-pdf-demo"
+        },
+        "object": {
+          "key": "test.pptx"
+        }
+      }
+    }
+  ]
+}
