@@ -104,6 +104,147 @@ The Lambda function requires an IAM role with the following permissions:
 - Output PDF files will have the same name as the input file but with `.pdf` extension
 - Example: `presentation.pptx` → `presentation.pdf`
 
+## Docker and ECR Setup
+
+### Docker Configuration
+
+1. Create a Dockerfile:
+```dockerfile
+FROM public.ecr.aws/shelf/lambda-libreoffice-base:7.4-node16-x86_64
+COPY src/index.js ${LAMBDA_TASK_ROOT}/src/
+COPY package.json ${LAMBDA_TASK_ROOT}/
+CMD ["src/index.handler"]
+```
+
+2. Set up Docker buildx for multi-platform builds:
+```bash
+# Create a new builder instance
+docker buildx create --use
+
+# Build for AMD64 (Lambda's architecture)
+docker buildx build --platform linux/amd64 -t ppt-to-pdf-converter --load .
+```
+
+### Amazon ECR Setup
+
+1. Create an ECR repository:
+```bash
+aws ecr create-repository \
+    --repository-name ppt-to-pdf-converter \
+    --image-scanning-configuration scanOnPush=true
+```
+
+2. Authenticate Docker to ECR:
+```bash
+# Get AWS account ID
+export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+export AWS_REGION=$(aws configure get region)
+
+# Log in to ECR
+aws ecr get-login-password | \
+    docker login --username AWS --password-stdin \
+    ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+```
+
+3. Tag and push the image:
+```bash
+# Tag the image
+docker tag ppt-to-pdf-converter:latest \
+    ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/ppt-to-pdf-converter:latest
+
+# Push to ECR
+docker push \
+    ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/ppt-to-pdf-converter:latest
+```
+
+### Common Docker/ECR Issues and Solutions
+
+1. **Platform Mismatch**
+   - Error: "no matching manifest for linux/arm64/v8 in the manifest list entries"
+   - Solution: Use `--platform linux/amd64` with Docker buildx to build for Lambda's architecture
+
+2. **ECR Authentication**
+   - Error: "no basic auth credentials"
+   - Solution: Re-run the ECR login command (credentials expire after 12 hours)
+
+3. **Image Size**
+   - Issue: Large image size due to LibreOffice
+   - Solution: Using the pre-built base image from Shelf.io significantly reduces size and build time
+
+4. **Cold Start**
+   - Issue: First invocation takes longer
+   - Solution: Consider using provisioned concurrency if faster cold starts are needed
+
+### Docker Development Tips
+
+1. Local Testing:
+```bash
+# Build locally
+docker build -t ppt-to-pdf-converter .
+
+# Test conversion locally
+docker run -v $(pwd)/test:/tmp ppt-to-pdf-converter \
+    libreoffice7.4 --headless --convert-to pdf \
+    --outdir /tmp /tmp/test.pptx
+```
+
+2. Debugging the Container:
+```bash
+# Run container interactively
+docker run -it ppt-to-pdf-converter /bin/bash
+
+# Check LibreOffice installation
+libreoffice7.4 --version
+
+# Verify Node.js environment
+node --version
+```
+
+3. Optimizing the Image:
+- Use `.dockerignore` to exclude unnecessary files
+- Layer caching for faster builds
+- Multi-stage builds if needed
+
+### Updating the Lambda Function
+
+After making changes to the code:
+
+1. Rebuild the Docker image:
+```bash
+docker buildx build --platform linux/amd64 -t ppt-to-pdf-converter --load .
+```
+
+2. Push the new version:
+```bash
+docker tag ppt-to-pdf-converter:latest \
+    ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/ppt-to-pdf-converter:latest
+docker push \
+    ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/ppt-to-pdf-converter:latest
+```
+
+3. Update the Lambda function:
+```bash
+aws lambda update-function-code \
+    --function-name ppt-to-pdf-converter-docker \
+    --image-uri ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/ppt-to-pdf-converter:latest
+```
+
+### Base Image Details
+
+We use `public.ecr.aws/shelf/lambda-libreoffice-base:7.4-node16-x86_64` which provides:
+- Amazon Linux 2 base
+- Node.js 16.x runtime
+- LibreOffice 7.4 with headless support
+- Common fonts and dependencies
+- Lambda-optimized configuration
+
+Benefits of using this base image:
+- Pre-configured for AWS Lambda
+- Optimized for performance
+- Includes all necessary LibreOffice dependencies
+- Regular security updates
+- Smaller than building from scratch
+
 ## Docker Image
 
 The function uses a Docker image based on the LibreOffice Lambda base image from Shelf.io. The image includes:
